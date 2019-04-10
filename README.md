@@ -10,6 +10,7 @@ Brian the Binary is the Brain that runs concurrent goroutines to exec files in t
 ## TODO
 
 - Add Exec to Run Build Script
+- unzip/untar supporting/submission files to `/tmp/job`
 - Report Grades back to `plague_doctor`
 - Swap panics with errors
 
@@ -71,5 +72,5 @@ JOB_SECRET="foobar" # shared with plague doctor and court herald
 If a string does not match, the html will have a pretty diff like so:
 
 <pre style="fontFamily: monospace; background-color: white; color: black;">
-<span>foo</span><del style="background:#ffe6e6;">&para;<br></del><span>ba</span><del style="background:#ffe6e6;">z</del><ins style="background:#e6ffe6;">r</ins>
+<span>foo</span><del style="background-color:#ffe6e6;">&para;<br></del><span>ba</span><del style="background-color:#ffe6e6;">z</del><ins style="background-color:#e6ffe6;">r</ins>
 </pre>
