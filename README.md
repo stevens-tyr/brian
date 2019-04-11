@@ -18,7 +18,7 @@ Brian the Binary is the Brain that runs concurrent goroutines to exec files in t
 
 ```
 API_URI="localhost:5000/api/v1/plague_doctor" # plague doctor endpoint
-TEST_DATA="<Stringified JSON of Schema Above>"
+TEST_DATA="<Stringified JSON of Schema Below>"
 JOB_SECRET="foobar" # shared with plague doctor and court herald
 ```
 
