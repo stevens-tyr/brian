@@ -2,6 +2,8 @@ package grader
 
 import (
 	"errors"
+	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -25,19 +27,36 @@ type TestData struct {
 func (data TestData) Grade() ([]WorkerResult, error) {
 	results := make(chan WorkerResult, len(data.Tests))
 
-	for _, test := range data.Tests {
-		go Worker(test, results)
+	for id, test := range data.Tests {
+		go Worker(id, test, results)
 	}
 
-	var testResults []WorkerResult
+	testResults := make([]WorkerResult, len(data.Tests))
 	for range data.Tests {
 		select {
 		case res := <-results:
-			testResults = append(testResults, res)
+			testResults[res.ID] = res
 		case <-time.After(2 * time.Minute):
 			return nil, errors.New("Timed out while running tests. (One Minute)")
 		}
 	}
 
 	return testResults, nil
+}
+
+// Build will build the specified
+func (data TestData) Build() (map[string]string, error) {
+	cmds := strings.Split(data.TestBuildCMD, "\n")
+	totalOutput := make(map[string]string)
+	for _, cmd := range cmds {
+		args := strings.Fields(cmd)
+		buildCmd := exec.Command(args[0], args[1:]...)
+		buildOut, err := buildCmd.Output()
+		if err != nil {
+			return nil, err
+		}
+		totalOutput[cmd] = string(buildOut)
+	}
+
+	return totalOutput, nil
 }

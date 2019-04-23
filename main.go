@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"k8s-grader/grader"
+	"k8s-grader/utils"
 	"os"
 	"os/exec"
 
@@ -20,19 +21,51 @@ func main() {
 	testDataStr := os.Getenv("TEST_DATA")
 	secret := os.Getenv("JOB_SECRET")
 
-	fmt.Printf("API: %s\nData: %s\nSecret: %s\n", api, testDataStr, secret)
+	fmt.Println("\n[Brian]: ENV Variables:")
+	fmt.Printf("API: %s\nSecret: %s\nData: %s\n", api, secret, testDataStr)
 
 	var testData grader.TestData
 	if err := json.Unmarshal([]byte(testDataStr), &testData); err != nil {
 		panic(err)
 	}
 
-	// Change working directory
+	// Make Folder
 	mkdirCmd := exec.Command("mkdir", "-p", "/tmp/job")
 	if _, err := mkdirCmd.Output(); err != nil {
 		panic(err)
 	}
 
+	// Change CWD
+	if err := os.Chdir("/tmp/job"); err != nil {
+		panic(err)
+	}
+
+	// Download and extract supporting files
+	path := "/tmp/job/sup.tar.gz"
+	url := fmt.Sprintf("%s/job/%s/assignment/%s/supportingfiles/download", api, secret, testData.AssignmentID)
+	if err := utils.DownloadAndExtract(url, path, "tarball"); err != nil {
+		panic(err)
+	}
+
+	// Download and extract submission
+	path = "/tmp/job/sub.tar.gz"
+	url = fmt.Sprintf("%s/job/%s/submission/%s/download", api, secret, testData.SubmissionID)
+	if err := utils.DownloadAndExtract(url, path, "tarball"); err != nil {
+		panic(err)
+	}
+
+	// Build
+	fmt.Println("\n[Brian]: Starting Build Script")
+	buildOut, err := testData.Build()
+	if err != nil {
+		panic(err)
+	}
+
+	for k, v := range buildOut {
+		fmt.Printf("[Brian]: Build - Exec '%s' Output:\n%s", k, v)
+	}
+
+	// Grade the assignment
 	results, err := testData.Grade()
 	if err != nil {
 		panic(err)
@@ -43,28 +76,10 @@ func main() {
 	enc.SetEscapeHTML(false)
 	enc.SetIndent(" ", "  ")
 	_ = enc.Encode(results)
-	fmt.Printf("\nTest Results: \n%+v", string(buf.String()))
-
-	return
-	// Download assignment
-	// job/:secret/submission/:sid/download
-	// path := "/tmp/submission.tar.gz"
-	// url := fmt.Sprintf("%s/job/%s/submission/%s/download", api, secret, subID)
-	// if err := utils.DownloadFile(path, url); err != nil {
-	// 	panic(err)
-	// }
-
-	// Download supporting files
-	// job/:secret/assignment/:aid/supportingfiles/download
-	// path = "/tmp/support.tar.gz"
-	// url = fmt.Sprintf("%s/job/%s/assignment/%s/supportingfiles/download", api, secret, assID)
-	// if err := utils.DownloadFile(path, url); err != nil {
-	// 	panic(err)
-	// }
-
-	// Grade Submission
+	fmt.Printf("\n[Brian]: Test Results: \n%+v", string(buf.String()))
 
 	// Send grade back to court-herald
 
-	// fmt.Printf("finished!")
+	fmt.Printf("\n[Brian]: Finished Successfully.\n")
+	return
 }
