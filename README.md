@@ -9,41 +9,41 @@ Brian the Binary is the Brain that runs concurrent goroutines to exec files in t
 
 ## TODO
 
-- Add Exec to Run Build Script
-- unzip/untar supporting/submission files to `/tmp/job`
-- Report Grades back to `plague_doctor`
-- Swap panics with errors
+- ~Add Exec to Run Build Script~
+- ~unzip/untar supporting/submission files to `/tmp/job`~
+- ~Report Grades back to `plague_doctor`~
+- ~Swap panics with errors~
+- support zip files
 
 ## Example env
 
 ```
-API_URI="localhost:5000/api/v1/plague_doctor" # plague doctor endpoint
-TEST_DATA="<Stringified JSON of Schema Below>"
+BACKEND_URL="http://localhost:5000/api/v1/plague_doctor" # plague doctor endpoint
+COURT_HERALD_URL="http://localhost:4000/api/v1/grader"
+SUB_ID="5cc0d5b6d1f3acfda73f5cb4"
+ASSIGN_ID="5cc0c4e3823d153ae0e3201d"
+BUILD_CMD="echo -n foobar"
+TESTS="<Stringified JSON Below>"
 JOB_SECRET="foobar" # shared with plague doctor and court herald
 ```
 
-## Example JSON Input for Brian:
+## Example Tests JSON Input for Brian:
 
 ```json
-{
-  "submissionID": "<MONGO ID>",
-  "assignmentID": "<MONGO ID>",
-  "testBuildCMD": "echo -n build stuff here",
-  "tests": [
-    {
-      "name": "Testing Echo",
-      "expectedOutput": "foobar",
-      "studentFacing": true,
-      "testCMD": "echo -n foobar"
-    },
-    {
-      "name": "Testing Echo Multiline",
-      "expectedOutput": "foo\nbar",
-      "studentFacing": true,
-      "testCMD": "echo -n foo\nbaz"
-    }
-  ]
-}
+[
+  {
+    "name": "Testing Echo",
+    "expectedOutput": "foobar",
+    "studentFacing": true,
+    "testCMD": "echo -n foobar"
+  },
+  {
+    "name": "Testing Echo Multiline",
+    "expectedOutput": "foo\nbar",
+    "studentFacing": true,
+    "testCMD": "echo -n foo\nbaz"
+  }
+]
 ```
 
 ## Example JSON Output for Brian:
@@ -51,6 +51,8 @@ JOB_SECRET="foobar" # shared with plague doctor and court herald
 ```json
 [
   {
+    "id": 0,
+    "name": "Test 2",
     "panicked": false,
     "passed": true,
     "output": "foobar",
@@ -59,6 +61,8 @@ JOB_SECRET="foobar" # shared with plague doctor and court herald
     "name": "Testing Echo"
   },
   {
+    "id": 1,
+    "name": "Test 2",
     "panicked": false,
     "passed": false,
     "output": "foobar",

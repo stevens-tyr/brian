@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"k8s-grader/grader"
@@ -17,16 +16,27 @@ func main() {
 		fmt.Println("Error loading .env file")
 	}
 
-	api := os.Getenv("API_URI")
-	testDataStr := os.Getenv("TEST_DATA")
+	backendURL := os.Getenv("BACKEND_URL")
+	subID := os.Getenv("SUB_ID")
+	assignID := os.Getenv("ASSIGN_ID")
+	testBuildCMD := os.Getenv("BUILD_CMD")
+	testsString := os.Getenv("TESTS")
 	secret := os.Getenv("JOB_SECRET")
 
-	fmt.Println("\n[Brian]: ENV Variables:")
-	fmt.Printf("API: %s\nSecret: %s\nData: %s\n", api, secret, testDataStr)
+	bs := []byte(testsString)
+	var tests []grader.Test
+	json.Unmarshal(bs, &tests)
 
-	var testData grader.TestData
-	if err := json.Unmarshal([]byte(testDataStr), &testData); err != nil {
-		panic(err)
+	testData := grader.TestData{
+		AssignmentID: assignID,
+		SubmissionID: subID,
+		TestBuildCMD: testBuildCMD,
+		Tests:        tests,
+	}
+
+	fmt.Println("\n[Brian]: ENV:")
+	for _, e := range os.Environ() {
+		fmt.Println(e)
 	}
 
 	// Make Folder
@@ -42,14 +52,14 @@ func main() {
 
 	// Download and extract supporting files
 	path := "/tmp/job/sup.tar.gz"
-	url := fmt.Sprintf("%s/job/%s/assignment/%s/supportingfiles/download", api, secret, testData.AssignmentID)
+	url := fmt.Sprintf("%s/job/%s/assignment/%s/supportingfiles/download", backendURL, secret, testData.AssignmentID)
 	if err := utils.DownloadAndExtract(url, path, "tarball"); err != nil {
 		panic(err)
 	}
 
 	// Download and extract submission
 	path = "/tmp/job/sub.tar.gz"
-	url = fmt.Sprintf("%s/job/%s/submission/%s/download", api, secret, testData.SubmissionID)
+	url = fmt.Sprintf("%s/job/%s/submission/%s/download", backendURL, secret, testData.SubmissionID)
 	if err := utils.DownloadAndExtract(url, path, "tarball"); err != nil {
 		panic(err)
 	}
@@ -71,15 +81,13 @@ func main() {
 		panic(err)
 	}
 
-	buf := new(bytes.Buffer)
-	enc := json.NewEncoder(buf)
-	enc.SetEscapeHTML(false)
-	enc.SetIndent(" ", "  ")
-	_ = enc.Encode(results)
-	fmt.Printf("\n[Brian]: Test Results: \n%+v", string(buf.String()))
-
 	// Send grade back to court-herald
+	fmt.Printf("\n[Brian]: Sending Test Results to Backend\n")
+	url = fmt.Sprintf("%s/job/%s/submission/%s/update", backendURL, secret, testData.SubmissionID)
+	err = utils.SendResults(url, results)
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Printf("\n[Brian]: Finished Successfully.\n")
-	return
 }
