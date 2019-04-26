@@ -50,12 +50,14 @@ func (data TestData) Build() (map[string]string, error) {
 	totalOutput := make(map[string]string)
 	for _, cmd := range cmds {
 		args := strings.Fields(cmd)
-		buildCmd := exec.Command(args[0], args[1:]...)
-		buildOut, err := buildCmd.Output()
-		if err != nil {
-			return nil, err
+		if args[0][0] != '#' {
+			buildCmd := exec.Command(args[0], args[1:]...)
+			buildOut, err := buildCmd.Output()
+			if err != nil {
+				return nil, err
+			}
+			totalOutput[cmd] = string(buildOut)
 		}
-		totalOutput[cmd] = string(buildOut)
 	}
 
 	return totalOutput, nil
