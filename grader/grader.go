@@ -2,6 +2,7 @@ package grader
 
 import (
 	"errors"
+	"fmt"
 	"os/exec"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ func (data TestData) Grade() ([]WorkerResult, error) {
 	results := make(chan WorkerResult, len(data.Tests))
 
 	for id, test := range data.Tests {
+		fmt.Printf("Creating Worker [%d], Test:\n(%+v)\n", id, test)
 		go Worker(id, test, results)
 	}
 
@@ -35,6 +37,7 @@ func (data TestData) Grade() ([]WorkerResult, error) {
 	for range data.Tests {
 		select {
 		case res := <-results:
+			fmt.Printf("TEST %d RESULT:\n%+v\n", res.ID, res)
 			testResults[res.ID] = res
 		case <-time.After(2 * time.Minute):
 			return nil, errors.New("Timed out while running tests. (Two Minutes)")
