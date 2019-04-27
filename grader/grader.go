@@ -37,7 +37,7 @@ func (data TestData) Grade() ([]WorkerResult, error) {
 		case res := <-results:
 			testResults[res.ID] = res
 		case <-time.After(2 * time.Minute):
-			return nil, errors.New("Timed out while running tests. (One Minute)")
+			return nil, errors.New("Timed out while running tests. (Two Minutes)")
 		}
 	}
 

@@ -42,33 +42,33 @@ func main() {
 	// Make Folder
 	mkdirCmd := exec.Command("mkdir", "-p", "/tmp/job")
 	if _, err := mkdirCmd.Output(); err != nil {
-		panic(err)
+		utils.EmitError(err)
 	}
 
 	// Change CWD
 	if err := os.Chdir("/tmp/job"); err != nil {
-		panic(err)
+		utils.EmitError(err)
 	}
 
 	// Download and extract supporting files
 	path := "/tmp/job/sup.tar.gz"
 	url := fmt.Sprintf("%s/job/%s/assignment/%s/supportingfiles/download", backendURL, secret, testData.AssignmentID)
 	if err := utils.DownloadAndExtract(url, path, "tarball"); err != nil {
-		panic(err)
+		utils.EmitError(err)
 	}
 
 	// Download and extract submission
 	path = "/tmp/job/sub.tar.gz"
 	url = fmt.Sprintf("%s/job/%s/submission/%s/download", backendURL, secret, testData.SubmissionID)
 	if err := utils.DownloadAndExtract(url, path, "tarball"); err != nil {
-		panic(err)
+		utils.EmitError(err)
 	}
 
 	// Build
 	fmt.Println("\n[Brian]: Starting Build Script")
 	buildOut, err := testData.Build()
 	if err != nil {
-		panic(err)
+		utils.EmitError(err)
 	}
 
 	for k, v := range buildOut {
@@ -78,7 +78,7 @@ func main() {
 	// Grade the assignment
 	results, err := testData.Grade()
 	if err != nil {
-		panic(err)
+		utils.EmitError(err)
 	}
 
 	// Send grade back to court-herald
@@ -86,7 +86,7 @@ func main() {
 	url = fmt.Sprintf("%s/job/%s/submission/%s/update", backendURL, secret, testData.SubmissionID)
 	err = utils.SendResults(url, results)
 	if err != nil {
-		panic(err)
+		utils.EmitError(err)
 	}
 
 	fmt.Printf("\n[Brian]: Finished Successfully.\n")

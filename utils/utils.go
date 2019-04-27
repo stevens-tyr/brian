@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"k8s-grader/grader"
 	"net/http"
@@ -83,6 +84,28 @@ func SendResults(url string, results []grader.WorkerResult) error {
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return errors.New("invalid response from backend")
+	}
+
+	return nil
+}
+
+// EmitError sends an error to the backend to report an error during testing
+func EmitError(theError error) error {
+	fmt.Printf("[BRIAN ERROR]: %s\n", theError)
+
+	url := fmt.Sprintf("%s/job/%s/submission/%s/error", os.Getenv("BACKEND_URL"), os.Getenv("JOB_SECRET"), os.Getenv("SUB_ID"))
+	req, err := http.NewRequest("PATCH", url, nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		panic(errors.New("invalid response from backend"))
 	}
 
 	return nil
