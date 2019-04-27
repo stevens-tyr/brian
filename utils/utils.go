@@ -72,7 +72,9 @@ func SendResults(url string, results []grader.WorkerResult) error {
 	enc.SetIndent(" ", "  ")
 	_ = enc.Encode(results)
 
-	req, err := http.NewRequest("PATCH", url, buf)
+	jsonString := buf.String()
+	fmt.Printf("[BRIAN] Sending Results: \n%s\n", jsonString)
+	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer([]byte(jsonString)))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
