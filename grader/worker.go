@@ -29,7 +29,7 @@ func Worker(id int, t Test, results chan WorkerResult) {
 		results <- WorkerResult{ID: id, Panicked: true, Passed: false, StudentFacing: t.StudentFacing, Output: "", HTML: "", TestCMD: t.TestCMD, Name: t.Name}
 	} else {
 		dmp := diffmatchpatch.New()
-		diffs := dmp.DiffMain(t.ExpectedOutput, string(testOut), false)
+		diffs := dmp.DiffMain(string(testOut), t.ExpectedOutput, false)
 		passed := true
 		if len(diffs) > 1 {
 			passed = false
